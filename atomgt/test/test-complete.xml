@@ -1,0 +1,94 @@
+<feed 5myattr="myval" xmlns="http://www.w3.org/2005/Atom">
+  <author 1myattr="myval">
+    <name>Feed Author 2</name>
+    <uri>http://example.com/u/feedauthor2</uri>
+    <email>feedauthor2@example.com</email>
+  </author>
+  <category scheme="http://example.com/catScheme" term="Cat Term 1" label="Cat Label 1" 2myattr="myval"/>
+  <category scheme="http://example.com/catScheme" term="Cat Term 2" label="Cat Label 2"/>
+  <contributor 3myattr="myval">
+    <name>Feed Contributor 1</name>
+    <uri>http://example.com/u/feedcontributor1</uri>
+    <email>feedcontributor1@example.com</email>
+  </contributor>
+  <contributor>
+    <name>Feed Contributor 2</name>
+    <uri>http://example.com/u/feedcontributor2</uri>
+    <email>feedcontributor2@example.com</email>
+  </contributor>
+  <generator
+    url="http://www.example.com/generator"
+    version="1.0" 6myattr="myval">Example Toolkit</generator>
+  <icon>http://example.com/favicon.ico</icon>
+  <id>tag:example.com,2003:3</id>
+  <link
+    rel="alternate"
+    type="text/html" href="http://example.com/" 7myattr="myval"/>
+  <link rel="self"
+    type="application/atom+xml" href="http://example.org/feed.atom"/>
+  <rights>Copyright (c) 200X, Example, Inc.</rights>
+  <subtitle type="text/html">&amp; Feed Subtitle</subtitle>
+  <title>Feed Title</title>
+  <updated>2005-07-31T12:29:29Z</updated>
+  <entry 4myattr="myval">
+    <author>
+      <name>Mark Pilgrim</name>
+      <uri>http://example.org/</uri>
+      <email>f8dy@example.com</email>
+    </author>
+    <content
+      type="application/xhtml+xml"
+      xml:language="en" xml:base="http://diveintomark.org/" 3myattr="myval">
+      <div>
+        <p><i>[Update: The Atom draft is finished.]</i></p>
+      </div>
+    </content>
+    <contributor>
+      <name>Sam Ruby</name>
+    </contributor>
+    <contributor>
+      <name>Joe Gregorio</name>
+    </contributor>
+    <id>tag:example.org,2003:3.2397</id>
+    <link rel="alternate" type="text/html"
+      href="http://example.org/2005/04/02/atom"/>
+    <link rel="enclosure" type="audio/mpeg"
+      href="http://example.org/audio/ph34r_my_podcast.mp3" length="1337"/>
+    <published>2003-12-13T12:29:29Z</published>
+    <source 8myattr="myval">
+      <author>
+        <name>Source Feed Author 2</name>
+        <uri>http://example.com/u/s/feedauthor2</uri>
+        <email>s_feedauthor2@example.com</email>
+      </author>
+      <category scheme="http://example.com/catScheme"
+        term="Source Cat Term 1" label="Source Cat Label 1"/>
+      <category scheme="http://example.com/catScheme"
+        term="Source Cat Term 2" label="Source Cat Label 2"/>
+      <contributor>
+        <name>Source Feed Contributor 1</name>
+        <uri>http://example.com/u/s/feedcontributor1</uri>
+        <email>s_feedcontributor1@example.com</email>
+      </contributor>
+      <contributor>
+        <name>Source Feed Contributor 2</name>
+        <uri>http://example.com/u/s/feedcontributor2</uri>
+        <email>s_feedcontributor2@example.com</email>
+      </contributor>
+      <generator url="http://www.example.com/s/generator"
+        version="1.0">Example Toolkit</generator>
+      <icon>http://example.com/s/favicon.ico</icon>
+      <id>tag:example.com,2003:3s/</id>
+      <link rel="alternate" type="text/html" href="http://example.com/s/"/>
+      <link rel="self"
+        type="application/atom+xml" href="http://example.org/s/feed.atom"/>
+      <rights>Source Copyright (c) 200X, Example, Inc.</rights>
+      <subtitle>Source Feed Subtitle</subtitle>
+      <title>Source Feed Title</title>
+      <updated>2005-07-31T12:29:29Z</updated>
+    </source>
+    <summary>Entry Summary</summary>
+    <title>Atom draft-07 snapshot</title>
+    <updated>2005-07-31T12:29:29Z</updated>
+  </entry>
+</feed>

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--!
+   Copyright 2006 BadPopcorn, Inc. <http://badpopcorn.com/>
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+
+  AtomGT (Atom Genshi Templates)
+  http://code.google.com/p/atomgt/
+
+  Atom Publishing Protocol
+  http://ietf.org/html.charters/atompub-charter.html
+
+  NOTE: any required (req) item listed below is listed as such because
+    it is specified as such in the Atom Publishing Protocol or Atom
+    Syntax documents. However, the implementation of the XML template
+    will silently ignore any missing values; the specific element,
+    attribute, or value will not be produced in the output at that
+    Atom required postion.
+  NOTE: any optional (opt) item listed below is not required to exist
+    in the input. If omitted, then the attribute or element that
+    would have enclosed (or presented) the optional item's value
+    will also be omitted.
+    Missing and blank ("") are not the same; blank values will
+    be produced in the output.
+
+  NOTE: "SIDE EFFECT"s are listed to understand what is going on,
+    but developers SHOULD NOT use them.
+
+  service_attrs - A dictionary, XML attributes to add to <service>.
+    These attributes can conflict with existing XML <service> attributes
+    in the template, be careful. E.g. - two declarations of 'xmlns',
+    but one won't have overwritten the other because the existing
+    'xmlns' was not bound to a template variable.
+
+  workspaces - SIDE EFFECT: A python str object "" does have a built-in
+    attribute named title. Thus it is implied that "strValue" would
+    produce the same results as the dictionary: { 'title': "strValue" }
+  workspaces - An iterable, where each item is workspace.
+
+  workspace - SIDE EFFECT: See above workspaces SIDE EFFECT.
+  workspace - Object with the following attributes (or elements):
+    title - (opt) A string. The atom:title of the workspace, a child element.
+    attrs - (opt) A dictionary of XML attributes to add to <workspace>.
+      If there is a name conflict between the key in attrs and
+      one defined by this API, then the one in attrs wins.
+    collections - (opt) An iterable, which lists collection items.
+
+  collection - SIDE EFFECT: See above workspaces SIDE EFFECT.
+  collection - Object with the following attributes (or elements):
+    title - (opt) A string, the title of this Collection.
+    href - (req) A string, the AtomURI of the Collection.
+    accept - (opt) A string, see Atom Publishing Protocol.
+    attrs - (opt) A dictionary of XML attributes to add to <collection>.
+      If there is a name conflict between the key in attrs and
+      one defined by this API, then the one in attrs wins.
+    categories - A string or an object; see the categories description.
+    
+  categories (As a string) - An AtomURI, points to an Atom Category Document.
+  categories (As an Object) - One with the following attributes (or elements):
+    fixed - (opt) A string: 'yes' or 'no'; missing implies 'no' (AtomPP).
+    scheme - (opt) A string, see AtomPP.
+    attrs - (opt) A dictionary of XML attributes to add to <categories>.
+      If there is a name conflict between the key in attrs and
+      one defined by this API, then the one in attrs wins.
+    list - An iterable, each item in the list is a category.
+      If passed a string, then we get a bunch of empty category elements.
+      If passed a non-iterable (e.g.- int), then we get an exception.
+      Other iterables - Untested, undefined.
+  categories (As NoneType) - Does nothing, nothing produced.
+  categories (As anything else) - Untested, undefined, probably produces
+    an empty <categories> element.
+
+  category - Object with the following attributes (or elements).
+    scheme - (opt) A string, the namespace to which the term belongs.
+    term - (req) A string, The category term.
+    label - (opt) A string, a human readable Label.
+    attrs - (opt) A dictionary of XML attributes to add to <category>.
+      If there is a name conflict between the key in attrs and
+      one defined by this API, then the one in attrs wins.
+
+-->
+<service xmlns="http://purl.org/atom/app#"
+  xmlns:atom="http://www.w3.org/2005/Atom"
+  xmlns:py="http://genshi.edgewall.org/"
+  py:attrs="service_attrs" >
+
+  <!--! Iterate through the workspaces. -->
+  <workspace py:for="workspace in workspaces"
+    py:if="workspaces"
+    py:attrs="workspace.attrs" >
+    <atom:title py:if="workspace.title">${workspace.title}</atom:title>
+
+    <!--! Iterate through each collection of the workspace. -->
+    <collection py:for="collection in workspace.collections"
+      py:if="workspace.collections"
+      href="${collection.href}"
+      py:attrs="collection.attrs">
+
+      <atom:title py:if="collection.title">${collection.title}</atom:title>
+      <accept py:if="collection.accept">${collection.accept}</accept>
+
+      <!--! If 'categories' exists in the collection, then add its information
+        to the xml. If 'categories' is a string, then we want to
+        reference the external categories document. Else we
+        assume that categories is some object that provides
+        our needed attributes.
+      -->
+      <categories
+        py:if="type(collection.categories) in [str,unicode]"
+        href="${collection.categories}" />
+
+      <categories
+        py:if="type(collection.categories) not in [str,unicode]"
+        scheme="${collection.categories.scheme}"
+        fixed="${collection.categories.fixed}" >
+
+        <atom:category py:for="category in collection.categories.list"
+          py:if="collection.categories.list"
+          scheme="${category.scheme}"
+          term="${category.term}"
+          label="${category.label}"
+          py:attrs="category.attrs"
+          />
+      </categories>
+
+    </collection>
+  </workspace>
+</service>
