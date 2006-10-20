@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--!
+   Copyright 2006 BadPopcorn, Inc. <http://badpopcorn.com/>
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+
+  AtomGT (Atom Genshi Templates)
+  http://code.google.com/p/atomgt/
+
+  Atom Syntax (RFC4287)
+  http://ietf.org/rfc/rfc4287
+
+  Feedparser (Python Feed Parser)
+  http://feedparser.org/
+
+  Genshi (Python Template Engine)
+  http://genshi.edgewall.org/
+
+  This Genshi template will spit out an Atom Feed (or Entry) document.
+  The input is an object (or set of objects) that match the Feedparser's
+  output (given feed and entries) except where specified below.
+
+  Note that this template only outputs textual XML, it does not check
+  to see if the semantic result conforms to Atom rules.
+
+  GENSHI INPUT:
+    feed - (Required) Feed Data Model, or None
+    entries - (Optional) List of Entries
+
+    If feed is None, then the feed element is stripped from the output
+    and the entries list is solely processed. This is so one may pass
+    in an entries list containing a single atom entry to output a
+    stand-alone atom:entry document
+
+    NOTE: The `xmlns="http://www.w3.org/2005/Atom"`
+      namespace declaration only appears in the FIRST entry
+      element when the feed genshi variable is set to None.
+      If one wants to embed multiple entries into some other
+      document content, then the Atom namespace declaration
+      must appear further up in the containing XML document.
+
+  FYI - Atom Syntax Semantics:
+    1. atom:feed elements require the following child elements:
+      a. atom:id
+      b. atom:title
+      c. atom:updated
+    2. atom:entry elements require the following child elements:
+      a. atom:id
+      b. atom:title
+      c. atom:updated
+    3. Atom Person Constructs (e.g.- atom:author, and atom:contributor):
+      a. atom:name
+    4. atom:category elements require the following attributes:
+      a. atom:category
+    5. atom:link elements require the following attributes:
+      a. atom:href
+    6. atom:content or atom:link must be present in atom:entry.
+      a. NOTE from RFC4287:
+        "atom:link[@rel='alternate'] or atom:link[not(@rel)] or atom:content"
+        An atom:entry must have at least one atom:link element
+        with a rel attribute of 'alternate' or an atom:content.
+    7. atom:author elements in the document.
+      a. NOTE from RFC4287:
+        "atom:author or not(atom:entry[not(atom:author)])"
+        An atom:feed must have an atom:author unless all 
+        of its atom:entry children have an atom:author.
+      b. NOTE from RFC4287:
+        "atom:author or ../atom:author or atom:source/atom:author"
+        An atom:entry must have an atom:author if its feed does not.
+
+  Feedparser 4.1 Data Model => Atom (RFC4287) Data Model:
+    feed.author_detail
+      .name => /feed/author/name
+      .href => /feed/author/uri
+      .email => /feed/author/email
+    feed.tags[i]
+      .scheme => /feed/category[@scheme]
+      .term => /feed/category[@term]
+      .label => /feed/category[@label]
+    feed.contributors
+      .name => /feed/contributor/name
+      .href => /feed/contributor/uri
+      .email => /feed/contributor/email
+    feed.generator_detail
+      .href => /feed/generator[@url]
+      .version => /feed/generator[@version]
+      .name => /feed/generator
+    feed.icon => /feed/icon
+    feed.id => /feed/id
+    feed.links[i]
+      .rel => /feed/link[@rel]
+      .type => /feed/link[@type]
+      .href => /feed/link[@href]
+      .title => /feed/link[@title]
+    feed.image.href => /feed/logo
+    feed.rights => /feed/rights
+    feed.subtitle => /feed/subtitle
+    feed.title => /feed/title
+    feed.updated_parsed => /feed/updated
+    entries[i].author_detail
+      .name => /feed/entry/author/name
+      .href => /feed/entry/author/uri
+      .email => /feed/entry/author/email
+    entries[i].tags
+      .scheme => /feed/entry/category[@scheme]
+      .term => /feed/entry/category[@term]
+      .label => /feed/entry/category[@label]
+    entries[i].content[i]
+      .type => /feed/entry/content[@type]
+      .language => /feed/entry/content[@xml:language]
+      .base => /feed/entry/content[@xml:base]
+      .value => /feed/entry/content
+    entries[i].contributors[i]
+      .name => /feed/entry/contributor/name
+      .href => /feed/entry/contributor/uri
+      .email => /feed/entry/contributor/email
+    entries[i].id => /feed/entry/id
+    entries[i].links[i]
+      .rel => /feed/entry/link[@rel]
+      .type => /feed/entry/link[@type]
+      .href => /feed/entry/link[@href]
+      .title => /feed/entry/link[@title]
+    entries[i].published_parsed => /feed/entry/published
+    entries[i].rights => /feed/entry/rights
+    entries[i].source => Mapping is same as feed with two exceptions:
+      1. Maps to /feed/entry/source/ instead of /feed/
+      2. All child elements of source are optional.
+    entries[i].summary => /feed/entry/summary
+    entries[i].title => /feed/entry/title
+    entries[i].updated_parsed => /feed/entry/updated
+
+  Additional Feedparser to Atom (RFC4287) Mappings (Our Extensions):
+    feed.attrs => /feed[@*]
+    feed.author_detail.attrs => /feed/author[@*]
+    feed.authors[i]
+      .attrs => /feed/author[@*]
+      .name => /feed/author/name
+      .href => /feed/author/uri
+      .email => /feed/author/email
+    feed.category[i].attrs => /feed/category[@*]
+    feed.contributors[i].attrs => /feed/contributor[@*]
+    feed.generator_detail.attrs => /feed/generator[@*]
+    feed.links[i]
+      .attrs => /feed/link[@*]
+      .hreflang => /feed/link[@hreflang]
+      .length => /feed/link[@length]
+    entries[i].attrs => /feed/entry[@*]
+    entries[i].author_detail.attrs => /feed/entry/author[@*]
+    entries[i].authors[i]
+      .attrs => /feed/entry/author[@*]
+      .name => /feed/entry/author/name
+      .href => /feed/entry/author/uri
+      .email => /feed/entry/author/email
+    entries[i].content[i].attrs => /feed/entry/content[@*]
+    entries[i].content[i].src => /feed/entry/content[@src]
+      - Use this for out-of-line content.
+    entries[i].links[i]
+      .attrs => /feed/entry/link[@*]
+      .hreflang => /feed/entry/link[@hreflang]
+      .length => /feed/entry/link[@length]
+    entries[i].rights => /feed/entry/rights
+    entries[i].source.attrs => /feed/entry/source[@*]
+
+  Departures from the Atom Syntax Specification (RFC4287):
+    1. atom:rights[@type], atom:subtitle[@type], atom:summary[@type],
+      and atom:title[@type] attributes are omitted from the
+      output. This template does not give its user the ability
+      to set these attributes. This is because we did not want to
+      depart too much from Feedparser's data model.
+
+  Enclosures:
+    Atom enclosures are atom:link elements. When Feedparser reads
+    Atom feeds, the enclosure exists in both entries[i].links
+    and in entries[i].enclosure. However, the enclosure is
+    unlisted in entries[i].links when feedparser obtains such an
+    enclosure from other feed formats (RSS).
+
+    Special handling is required by this template's user to
+    incorporate RSS enclosures (as given by Feedparser) into
+    the entries[i].links dictionary.
+
+  UNESCAPING atom:content XML data:
+    Text is translated by Genshi to XML safe characters by default.
+    So one my bypass this by explicitly telling Genshi (by
+    using Genshi's Markup class) to output the text as is,
+    without escaping. This is primarily needed to output XML markup
+    in atom:content areas.
+    ### Example)
+    >>> from genshi.core import Markup
+    >>> from genshi.template import TemplateLoader
+    >>> import feedparser
+    >>> loader = TemplateLoader(['.'])
+    >>> tmpl = loader.load('thisAtomTemplate.xml')
+    >>> d = feedparser.parse('myAtomFeed.xml')
+    >>> for entry in d.entries:
+    ...  for x in range(len(entry.content)):
+    ...    if(entry.content[x].type.endswith('+xml') or
+    ...      entry.content[x].type.endswith('/xml')):
+    ...      entry.content[x].value = Markup(entry.content[x].value)
+    >>> stream = tmpl.generate(feed=d.feed,entries=d.entries)
+    >>> result = stream.render('xml')
+    >>> print result
+
+  Atom Extensions (Adding foreign markup to Atom Documents):
+    Atom allows one to add namespace-qualified extension elements
+    and attributes to its content. This template only supports
+    a subset of these extension points, listed below:
+
+    About atom:content, a Special Case:
+      Follow the Atom Syntax Rules found in RFC4287 when generating
+      this block. It is up to this template's user in creating
+      the proper XML (see "UNESCAPING atom:content XML data" above).
+
+    Element Extension Points:
+      TODO: Actually implement the following element extensions.
+      (yes) atom:author
+      ( no) atom:category - Atom defines as undefinedContent.
+      (yes) atom:contributor
+      (yes) atom:entry
+      (yes) atom:feed
+      ( no) atom:link - Atom defines as undefinedContent.
+      (yes) atom:source
+
+    Attribute Extension Points:
+      (yes) atom:author
+      (yes) atom:category
+      (yes) atom:contributor
+      (yes) atom:content
+      ( no) atom:email (As in PersonConstruct)
+      (yes) atom:entry
+      (yes) atom:feed
+      (yes) atom:generator
+      ( no) atom:icon
+      ( no) atom:id
+      (yes) atom:link
+      ( no) atom:logo
+      ( no) atom:name (As in PersonConstruct)
+      ( no) atom:published
+      ( no) atom:rights
+      (yes) atom:source
+      ( no) atom:subtitle
+      ( no) atom:summary
+      ( no) atom:title
+      ( no) atom:updated
+      ( no) atom:uri (As in PersonConstruct)
+
+-->
+<feed
+  xmlns="http://www.w3.org/2005/Atom"
+  xmlns:py="http://genshi.edgewall.org/"
+  py:strip="not feed"
+  py:attrs="feed.attrs" >
+
+  <py:def function="ATOM_AUTHORS(firstAuthor, authors)">
+    <!--! this first author block is for feedparser -->
+    <author py:if="firstAuthor"
+      py:attrs="firstAuthor.attrs"
+      py:content="ATOM_PERSON_CONSTRUCT(firstAuthor)" />
+    <author py:for="author in authors"
+      py:attrs="author.attrs"
+      py:content="ATOM_PERSON_CONSTRUCT(author)" />
+  </py:def>
+
+  <category py:def="ATOM_CATEGORIES(categories)"
+    py:for="category in categories"
+    scheme="${category.scheme}"
+    term="${category.term}"
+    label="${category.label}"
+    py:attrs="category.attrs" />
+
+  <content py:def="ATOM_CONTENTS(contents)"
+    py:for="content in contents"
+    type="${content.type}"
+    src="${content.src}"
+    xml:language="${content.language}"
+    xml:base="${content.base}"
+    py:attrs="content.attrs"
+    py:content="content.value"
+    />
+
+  <contributor py:def="ATOM_CONTRIBUTORS(contributors)"
+    py:for="contributor in contributors"
+    py:attrs="contributor.attrs"
+    py:content="ATOM_PERSON_CONSTRUCT(contributor)" />
+
+  <!--!
+    'd' is always a 9-tuple in UTC (as in python time module),
+    and this function outputs an RFC3339 date-time string.
+  -->
+  <py:def function="ATOM_DATE_CONSTRUCT(d)"
+    >${ d[0] }-${ "%02d" % d[1] }-${ "%02d" % d[2] }T${
+    "%02d" % d[3] }:${ "%02d" %d[4] }:${ "%02d" % d[5] }Z</py:def>
+
+  <entry py:def="ATOM_ENTRIES(entries)"
+    py:for="entry in entries"
+    py:attrs="entry.attrs" >
+    ${ATOM_AUTHORS(entry.author_detail, entry.authors)}
+    ${ATOM_CATEGORIES(entry.tags)}
+    ${ATOM_CONTENTS(entry.content)}
+    ${ATOM_CONTRIBUTORS(entry.contributors)}
+    ${ATOM_ID(entry.id)} <!--! REQUIRED: ID -->
+    ${ATOM_LINKS(entry.links)}
+    ${ATOM_PUBLISHED(entry.published_parsed)}
+    ${ATOM_RIGHTS(entry.rights)}
+    ${ATOM_SOURCE(entry.source)}
+    ${ATOM_SUMMARY(entry.summary)}
+    ${ATOM_TITLE(entry.title)} <!--! REQUIRED: TITLE -->
+    ${ATOM_UPDATED(entry.updated_parsed)} <!--! REQUIRED: UPDATED -->
+  </entry>
+
+  <py:def function="ATOM_FEED(feed)">
+    <!--!
+      NOTE:
+        The following children of the feed element will
+        be automatically omitted from the output if the feed
+        variable is undefined (or None).
+    -->
+    ${ATOM_AUTHORS(feed.author_detail, feed.authors)}
+    ${ATOM_CATEGORIES(feed.tags)}
+    ${ATOM_CONTRIBUTORS(feed.contributors)}
+    ${ATOM_GENERATOR(feed.generator_detail)}
+    ${ATOM_ICON(feed.icon)}
+    ${ATOM_ID(feed.id)} <!--! REQUIRED: ID -->
+    ${ATOM_LINKS(feed.links)}
+    ${ATOM_LOGO(feed.image)}
+    ${ATOM_RIGHTS(feed.rights)}
+    ${ATOM_SUBTITLE(feed.subtitle)}
+    ${ATOM_TITLE(feed.title)} <!--! REQUIRED: TITLE -->
+    ${ATOM_UPDATED(feed.updated_parsed)} <!--! REQUIRED: UPDATED -->
+  </py:def>
+
+  <!--! NOTE: Should Generator be overriden by this template? -->
+  <generator py:def="ATOM_GENERATOR(generator_detail)"
+    url="${generator_detail.href}"
+    version="${generator_detail.version}"
+    py:attrs="generator_detail.attrs"
+    py:content="generator_detail.name"
+    />
+
+  <icon py:def="ATOM_ICON(icon)"
+    py:if="icon" py:content="icon" />
+
+  <id py:def="ATOM_ID(id)"
+    py:if="id" py:content="id" />
+
+  <link py:def="ATOM_LINK(link)"
+    rel="${link.rel}"
+    type="${link.type}"
+    href="${link.href}"
+    title="${link.title}"
+    hreflang="${link.hreflang}"
+    length="${link.length}"
+    py:attrs="link.attrs" />
+
+  <py:for py:def="ATOM_LINKS(links)"
+    each="link in links">
+    ${ATOM_LINK(link)}
+  </py:for>
+
+  <logo py:def="ATOM_LOGO(logo)"
+    py:if="logo.href" py:content="logo.href" />
+
+  <py:def function="ATOM_PERSON_CONSTRUCT(person)">
+    <!--! name is req -->
+    <name py:if="person.name" py:content="person.name" />
+    <uri py:if="person.href" py:content="person.href" />
+    <email py:if="person.email" py:content="person.email" />
+  </py:def>
+
+  <!--! 'published' is always a 9-tuple in UTC -->
+  <published py:def="ATOM_PUBLISHED(published)"
+    py:if="published" py:content="ATOM_DATE_CONSTRUCT(published)" />
+
+  <rights py:def="ATOM_RIGHTS(rights)"
+    py:if="rights" py:content="rights" />
+
+  <source py:def="ATOM_SOURCE(source)"
+    py:if="source"
+    py:attrs="source.attrs"
+    py:content="ATOM_FEED(source)" />
+
+  <subtitle py:def="ATOM_SUBTITLE(subtitle)"
+    py:if="subtitle" py:content="subtitle" />
+
+  <summary py:def="ATOM_SUMMARY(summary)"
+    py:if="summary" py:content="summary" />
+
+  <title py:def="ATOM_TITLE(title)"
+    py:if="title" py:content="title" />
+
+  <!--! 'updated' is always a 9-tuple in UTC -->
+  <updated py:def="ATOM_UPDATED(updated)"
+    py:if="feed.updated"
+    py:content="ATOM_DATE_CONSTRUCT(updated)" />
+
+  <!--! Begin generating the feed metadata -->
+  ${ATOM_FEED(feed)}
+
+  <!--! Begin generating the entry elements -->
+  ${ATOM_ENTRIES(entries)}
+
+</feed>
